@@ -19,9 +19,7 @@ you must put this link into double quotes (example: `/skinfighters skinsFromURL 
 
 If you want to have your twitch subs as skins, you can use: https://whitelist.gorymoon.se/ and get the minecraft newline format url (link ends with /minecraft_nl)<br>
 
-Install this mod on server and client for the best experience.<br>
-If you have it on installed on server only, skins will still change, but nametags won't be visible.<br>
-If you have it on client only, skins won't change, but named fighters will have nametags visible (when naming them manually with nametags or commands).
+Install this mod on server or client.<br>
 
 Getting the mod from curseforge is recommended: [curseforge page](https://www.curseforge.com/minecraft/mc-mods/skin-fighters) <br>
 You can also build the mod yourself by using `./gradlew build` or grab .jar from releases.
