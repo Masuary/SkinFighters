@@ -35,20 +35,32 @@ public abstract class FighterEntityMixin extends Entity {
         super(p_19870_, p_19871_);
     }
 
-    @Inject(method = "finalizeSpawn", at = @At(value = "RETURN", target = "Liskallia/vault/entity/entity/FighterEntity;finalizeSpawn(Lnet/minecraft/world/level/ServerLevelAccessor;Lnet/minecraft/world/DifficultyInstance;Lnet/minecraft/world/entity/MobSpawnType;Lnet/minecraft/world/entity/SpawnGroupData;Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/entity/SpawnGroupData;"))
+    @Inject(
+            method = "finalizeSpawn",
+            at = @At(
+                    value = "RETURN",
+                    target = "Liskallia/vault/entity/entity/FighterEntity;finalizeSpawn(Lnet/minecraft/world/level/ServerLevelAccessor;Lnet/minecraft/world/DifficultyInstance;Lnet/minecraft/world/entity/MobSpawnType;Lnet/minecraft/world/entity/SpawnGroupData;Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/entity/SpawnGroupData;"
+            )
+    )
     public void customName(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, SpawnGroupData spawnData, CompoundTag dataTag, CallbackInfoReturnable<SpawnGroupData> cir) {
         List<? extends String> names = SkinFighters.getNames();
         if (!names.isEmpty() && skinFighters$random.nextInt(100) < Config.SKIN_CHANCE.get()) {
             String name = names.get(skinFighters$random.nextInt(0, names.size()));
             String star = String.valueOf('✦');
             int count = 0;
+
             if (!Config.DISABLE_STARS.get())
                 count = Math.max(ModEntities.VAULT_FIGHTER_TYPES.indexOf(this.getType()), 0);
+
             MutableComponent customName = new TextComponent("")
-                .append(new TextComponent(Strings.repeat(star, count)).withStyle(ChatFormatting.GOLD))
-                .append(count > 0 ? " " : "")
-                .append(new TextComponent(name));
+                    .append(new TextComponent(Strings.repeat(star, count)).withStyle(ChatFormatting.GOLD))
+                    .append(count > 0 ? " " : "")
+                    .append(new TextComponent(name));
+
             this.setCustomName(customName);
+
+            // Minimal server-side fix: sync nameplate visibility to *all* clients
+            this.setCustomNameVisible(true);
         }
     }
 
