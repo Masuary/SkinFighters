@@ -53,8 +53,7 @@ public abstract class FighterEntityMixin extends Entity {
                 String selectedName = names.get(skinFighters$random.nextInt(0, names.size()));
                 EntityType<?> entityType = this.getType();
 
-                serverLevel.getServer().tell(new TickTask(serverLevel.getServer().getTickCount() + 1, () -> {
-                    // Entity might have been removed by now, check if still valid
+                serverLevel.getServer().tell(new TickTask(serverLevel.getServer().getTickCount() + 2, () -> {
                     if (this.isRemoved()) {
                         return;
                     }
@@ -72,8 +71,14 @@ public abstract class FighterEntityMixin extends Entity {
                             .append(new TextComponent(selectedName));
 
                     this.setCustomName(customName);
-                    this.setCustomNameVisible(true);
                     this.skinFighters$pendingSkinApplication = false;
+                }));
+
+                // Delay visibility longer to avoid interfering with Herald fight spawn tracking
+                serverLevel.getServer().tell(new TickTask(serverLevel.getServer().getTickCount() + 20, () -> {
+                    if (!this.isRemoved()) {
+                        this.setCustomNameVisible(true);
+                    }
                 }));
             }
         }
