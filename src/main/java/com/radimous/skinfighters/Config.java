@@ -11,6 +11,7 @@ public class Config {
     public static ForgeConfigSpec.BooleanValue DISABLE_STARS;
     public static ForgeConfigSpec.EnumValue<SkinFighters.source> SOURCE;
     public static ForgeConfigSpec.ConfigValue<String> NAME_URL;
+    public static ForgeConfigSpec.BooleanValue DEBUG;
     public static ForgeConfigSpec SPEC;
 
     static {
@@ -54,6 +55,9 @@ public class Config {
         SOURCE = BUILDER
             .comment("Where should skinfighters get skin names from")
             .defineEnum("nameSource", SkinFighters.source.CONFIG, SkinFighters.source.values());
+        DEBUG = BUILDER
+            .comment("Enable debug logging to track fighter spawns (check logs/latest.log)")
+            .define("debug", false);
         SPEC = BUILDER.build();
     }
 }
