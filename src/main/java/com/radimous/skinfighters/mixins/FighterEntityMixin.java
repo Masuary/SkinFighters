@@ -9,6 +9,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.TickTask;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -31,6 +33,9 @@ public abstract class FighterEntityMixin extends Entity {
     @Unique
     private final Random skinFighters$random = new Random();
 
+    @Unique
+    private boolean skinFighters$pendingSkinApplication = false;
+
     public FighterEntityMixin(EntityType<?> p_19870_, Level p_19871_) {
         super(p_19870_, p_19871_);
     }
@@ -40,22 +45,37 @@ public abstract class FighterEntityMixin extends Entity {
     public void customName(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, SpawnGroupData spawnData, CompoundTag dataTag, CallbackInfoReturnable<SpawnGroupData> cir) {
         List<? extends String> names = SkinFighters.getNames();
         if (!names.isEmpty() && skinFighters$random.nextInt(100) < Config.SKIN_CHANCE.get()) {
-            String name = names.get(skinFighters$random.nextInt(0, names.size()));
-            String star = String.valueOf('✦');
-            int count = 0;
+            // Schedule name application for next tick to avoid interfering with spawn tracking
+            // This ensures MobSpawningUtils and SummoningStage complete their entity tracking first
+            this.skinFighters$pendingSkinApplication = true;
 
-            if (!Config.DISABLE_STARS.get())
-                count = Math.max(ModEntities.VAULT_FIGHTER_TYPES.indexOf(this.getType()), 0);
+            if (world instanceof ServerLevel serverLevel) {
+                String selectedName = names.get(skinFighters$random.nextInt(0, names.size()));
+                EntityType<?> entityType = this.getType();
 
-            MutableComponent customName = new TextComponent("")
-                    .append(new TextComponent(Strings.repeat(star, count)).withStyle(ChatFormatting.GOLD))
-                    .append(count > 0 ? " " : "")
-                    .append(new TextComponent(name));
+                serverLevel.getServer().tell(new TickTask(serverLevel.getServer().getTickCount() + 1, () -> {
+                    // Entity might have been removed by now, check if still valid
+                    if (this.isRemoved()) {
+                        return;
+                    }
 
-            this.setCustomName(customName);
+                    String star = String.valueOf('✦');
+                    int count = 0;
 
-            // Minimal server-side fix: sync nameplate visibility to *all* clients
-            this.setCustomNameVisible(true);
+                    if (!Config.DISABLE_STARS.get()) {
+                        count = Math.max(ModEntities.VAULT_FIGHTER_TYPES.indexOf(entityType), 0);
+                    }
+
+                    MutableComponent customName = new TextComponent("")
+                            .append(new TextComponent(Strings.repeat(star, count)).withStyle(ChatFormatting.GOLD))
+                            .append(count > 0 ? " " : "")
+                            .append(new TextComponent(selectedName));
+
+                    this.setCustomName(customName);
+                    this.setCustomNameVisible(true);
+                    this.skinFighters$pendingSkinApplication = false;
+                }));
+            }
         }
     }
 
